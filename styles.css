@@ -1,0 +1,141 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto 1fr;
+  gap: 20px;
+  max-width: 1200px;
+  width: 100%;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto; /* Centering the container */
+}
+
+.upload-section,
+.filters-section,
+.summary-section {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-section {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+
+.filters-section {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+
+.summary-section {
+  grid-column: 1 / 3;
+  grid-row: 2 / 3;
+  background-color: #f9f9f9;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.results-section {
+  grid-column: 1 / 3;
+  grid-row: 3 / 4;
+  margin-top: 20px;
+  background-color: #e9ecef;
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  overflow-y: auto;
+  height: 400px;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.label-bold {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+input[type="file"],
+.submit-btn,
+select {
+  display: block;
+  margin-bottom: 20px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Ensure the input stays within its container */
+}
+
+.submit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto; /* Center the button horizontally */
+  width: 50%; /* Reduce the button size */
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+select {
+  cursor: pointer;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  .filters-section {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+  }
+
+  .summary-section {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+  }
+
+  .results-section {
+    grid-column: 1 / 2;
+    grid-row: 4 / 5;
+  }
+}

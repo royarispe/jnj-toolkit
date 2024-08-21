@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Filtrar Información</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="upload-section">
+        <h2>Subir Documento</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <label for="fileInput" class="label-bold">Seleccionar archivo:</label>
+          <input
+            type="file"
+            id="fileInput"
+            name="fileInput"
+            accept=".csv, .xlsx, .txt"
+            required
+          />
+          <button type="submit" class="submit-btn">Cargar Datos</button>
+        </form>
+      </div>
+
+      <div class="filters-section">
+        <h2>Filtros</h2>
+        <form id="filterForm">
+          <label for="filterSelect" class="label-bold"
+            >Seleccionar filtro:</label
+          >
+          <select id="filterSelect" name="filterSelect" required>
+            <option value="referentes">Cantidad de Referentes</option>
+            <option value="inscriptos">Cantidad de Inscriptos</option>
+            <option value="totalPersonas">Cantidad Total de Personas</option>
+            <option value="restriccionAlimenticia">
+              Restricción Alimenticia
+            </option>
+            <option value="diocesis">Por Diócesis</option>
+            <option value="actividadPreferencia">
+              Por Actividad de Preferencia
+            </option>
+          </select>
+          <button type="submit" class="submit-btn">Aplicar Filtro</button>
+        </form>
+      </div>
+
+      <div id="results" class="results-section">
+        <!-- Aquí se mostrarán los resultados filtrados -->
+      </div>
+    </div>
+  </body>
+</html>
