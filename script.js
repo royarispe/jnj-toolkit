@@ -187,21 +187,6 @@ function displaySummary(referentes, inscriptos, inscripciones) {
     `;
 }
 
-function displayInscriptionCosts(inscripciones) {
-  const resultsDiv = document.getElementById("results");
-  const list = document.createElement("ul");
-
-  inscripciones.forEach((inscripcion, index) => {
-    const listItem = document.createElement("li");
-    listItem.textContent = `Inscripción ${
-      index + 1
-    }: $${inscripcion.costoTotal.toLocaleString()}`;
-    list.appendChild(listItem);
-  });
-
-  resultsDiv.appendChild(list);
-}
-
 class Referente {
   constructor(
     nombre,
