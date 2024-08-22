@@ -42,8 +42,8 @@ function processFile(content) {
   let costoTotal = 0;
 
   for (let i = 1; i < lines.length; i++) {
-    // Ignoramos la primera línea
     const line = lines[i].trim();
+    console.log("Processing line: ", line);
 
     if (line.startsWith("false,formulario,")) {
       if (currentReferente) {
@@ -57,26 +57,60 @@ function processFile(content) {
         inscriptos = [...inscriptos, ...currentInscriptos];
       }
 
+      currentReferente = null;
+      currentInscriptos = [];
+      
       const costoMatch = line.match(/"(\d+,\d+)"/);
       if (costoMatch) {
         const costoString = costoMatch[1].replace(/,/g, "");
         costoTotal = parseFloat(costoString);
       }
 
-      currentReferente = null;
-      currentInscriptos = [];
     } else if (line.startsWith("Nombre del Referente")) {
-      const referenteData = extractReferenteData(lines.slice(i, i + 18));
+      let referenteLines = [];
+
+      // Capturamos todas las líneas hasta "Nuevo Integrante" o una nueva inscripción
+      while (i < lines.length && 
+             !lines[i].startsWith("Nuevo Integrante") && 
+             !lines[i].startsWith("false,formulario,")) {
+        console.log("Referente line: ", lines[i]); // Log de cada línea de referente
+        referenteLines.push(lines[i].trim());
+        i++;
+      }
+
+      const referenteData = extractReferenteData(referenteLines);
       currentReferente = new Referente(...referenteData);
-      i += 17;
+
+      // Asegurarse de que no se salte la línea de "Nuevo Integrante" o "false,formulario"
+      i--;
+
     } else if (line.startsWith("Nuevo Integrante")) {
-      const inscriptoData = extractInscriptoData(lines.slice(i + 1, i + 13));
-      const inscripto = new Inscripto(...inscriptoData);
-      currentInscriptos.push(inscripto);
-      i += 12;
+      let inscriptoLines = [];
+
+      // Capturamos todas las líneas hasta el próximo integrante o una nueva inscripción
+      i++; // Avanzar para empezar a capturar las líneas del inscripto
+      while (i < lines.length && 
+             !lines[i].startsWith("Nuevo Integrante") && 
+             !lines[i].startsWith("false,formulario,")) {
+        console.log("Inscriptos line: ", lines[i]); // Log de cada línea de inscripto
+        inscriptoLines.push(lines[i].trim());
+        i++;
+      }
+
+      const inscriptoData = extractInscriptoData(inscriptoLines);
+
+      // Verificar que inscriptoData no sea null antes de usarlo
+      if (inscriptoData) {
+        const inscripto = new Inscripto(...inscriptoData);
+        currentInscriptos.push(inscripto);
+      }
+
+      // Asegurarse de que no se salte la línea de "Nuevo Integrante" o "false,formulario"
+      i--;
     }
   }
 
+  // Al finalizar, crear la última inscripción si existe un referente
   if (currentReferente) {
     const inscripcion = new Inscripcion(
       costoTotal,
@@ -89,8 +123,9 @@ function processFile(content) {
   }
 
   displaySummary(referentes, inscriptos, inscripciones);
-  displayInscriptionCosts(inscripciones); // Imprimir listado de costos por inscripción
+  console.log("Processing complete.");
 }
+
 
 function applyFilter() {
   const filterType = document.getElementById("filterSelect").value;
@@ -144,27 +179,186 @@ function displayFilteredResults(data) {
 }
 
 function extractReferenteData(lines) {
-  const data = [];
+  const data = {};
+  let process_next_line_as_restriction = false;
+  let process_next_line_as_activity = false;
 
-  lines.forEach((line) => {
-    if (!line.startsWith("Foto de Cédula del Referente")) {
-      const parts = line.split(":");
-      data.push(parts[1].trim());
+  for (let line of lines) {
+    if (line.includes("Foto de Cédula del Referente")) {
+      continue; // Ignorar la línea de la foto
     }
-  });
 
-  return data;
+    const [key, value] = line.split(":").map((item) => item.trim());
+
+    if (process_next_line_as_restriction) {
+      if (value) {
+        data["restriccionAlimenticia"] = [data["restriccionAlimenticia"], value];
+      }
+      process_next_line_as_restriction = false;
+      continue;
+    }
+
+    if (process_next_line_as_activity) {
+      data["actividadPreferencia"] += " - " + value;
+      process_next_line_as_activity = false;
+      continue;
+    }
+
+    // Lógica para manejar la restricción alimenticia
+    if (key === "¿Tienes alguna restriccion alimenticia?") {
+      data["restriccionAlimenticia"] = value;
+      process_next_line_as_restriction = true; // Siempre procesar la siguiente línea como la restricción alimenticia
+    } 
+    // Lógica para manejar la actividad de preferencia
+    else if (key === "Actividad de preferencia") {
+      if (value.toLowerCase() === "taller") {
+        data["actividadPreferencia"] = value;
+        process_next_line_as_activity = true; // Procesar la siguiente línea como parte del taller
+      } else {
+        data["actividadPreferencia"] = value;
+      }
+    } 
+    // Asignar a los atributos del objeto Referente según la clave
+    else {
+      switch (key) {
+        case "Nombre del Referente":
+          data["nombre"] = value;
+          break;
+        case "Apellido del Referente":
+          data["apellido"] = value;
+          break;
+        case "Celular del Referente":
+          data["celular"] = value;
+          break;
+        case "Email del Referente":
+          data["email"] = value;
+          break;
+        case "Fecha de nacimiento del Referente":
+          data["fechaNacimiento"] = value;
+          break;
+        case "Cédula del Referente":
+          data["cedula"] = value;
+          break;
+        case "Otra situación de salud a considerar":
+          data["salud"] = value;
+          break;
+        case "Contacto de emergencia":
+          data["contactoEmergencia"] = value;
+          break;
+        case "Nombre del Contacto de emergencia":
+          data["nombreContactoEmergencia"] = value;
+          break;
+        case "Vínculo del Contacto de emergencia":
+          data["vinculoContactoEmergencia"] = value;
+          break;
+        case "¿Perteneces a un movimiento?":
+          data["movimiento"] = value;
+          break;
+        case "Selecciona una diócesis":
+          const match = value.match(/\(([^)]+)\)/);
+          data["diocesis"] = match ? match[1] : value;
+          break;
+        case "¿Cuántos integrantes tiene tu grupo?":
+          data["cantidadIntegrantes"] = value;
+          break;
+        case "Costo de tu cupo $":
+          data["costo"] = value;
+          break;
+        default:
+          console.warn(`Clave no reconocida: ${key}`);
+          break;
+      }
+    }
+  }
+
+  return Object.values(data); // Retornar los valores en orden para crear el objeto Referente
 }
 
 function extractInscriptoData(lines) {
-  const data = [];
+  const data = {};
+  let process_next_line_as_restriction = false;
+  let process_next_line_as_activity = false;
 
   lines.forEach((line) => {
-    const parts = line.split(":");
-    data.push(parts[1].trim());
+    const [key, value] = line.split(":").map((item) => item.trim());
+
+    // Verificar si la línea tiene el formato clave:valor esperado
+    if (!key || !value) {
+      console.warn(`Línea inválida o malformada: ${line}`);
+      return; // Continuar si la línea no tiene formato clave:valor
+    }
+
+    // Manejo de la restricción alimenticia
+    if (process_next_line_as_restriction) {
+      if (value) {
+        data["restriccionAlimenticia"] = [data["restriccionAlimenticia"], value];
+      }
+      process_next_line_as_restriction = false;
+      return; // Continuar con la siguiente línea
+    }
+
+    // Manejo de la actividad de preferencia
+    if (process_next_line_as_activity) {
+      data["actividadPreferencia"] += " - " + value;
+      process_next_line_as_activity = false;
+      return; // Continuar con la siguiente línea
+    }
+
+    // Lógica para manejar la restricción alimenticia
+    if (key === "Tienes alguna restriccion alimenticia") {
+      data["restriccionAlimenticia"] = value;
+      process_next_line_as_restriction = true; // Siempre procesar la siguiente línea como la restricción alimenticia
+    } 
+    // Lógica para manejar la actividad de preferencia
+    else if (key === "Actividad de preferencia") {
+      if (value.toLowerCase() === "taller") {
+        data["actividadPreferencia"] = value;
+        process_next_line_as_activity = true; // Procesar la siguiente línea como parte del taller
+      } else {
+        data["actividadPreferencia"] = value;
+      }
+    } 
+    // Asignar a los atributos del objeto Inscripto según la clave
+    else {
+      switch (key) {
+        case "Nombre del integrante":
+          data["nombre"] = value;
+          break;
+        case "Apellido del Integrante":
+          data["apellido"] = value;
+          break;
+        case "Celular del Integrante":
+          data["celular"] = value;
+          break;
+        case "Fecha de nacimiento del Integrante":
+          data["fechaNacimiento"] = value;
+          break;
+        case "Cédula del Integrante":
+          data["cedula"] = value;
+          break;
+        case "Otra situación de salud a considerar":
+          data["salud"] = value;
+          break;
+        case "Perteneces a un movimiento":
+          data["movimiento"] = value;
+          break;
+        case "Selecciona una Diócesis":
+          const match = value.match(/\(([^)]+)\)/);
+          data["diocesis"] = match ? match[1] : value;
+          break;
+        case "Costo del cupo $":
+          data["costo"] = value;
+          break;
+        default:
+          console.warn(`Clave no reconocida: ${key}`);
+          break;
+      }
+    }
   });
 
-  return data;
+  // Verificar si los datos fueron correctamente asignados
+  console.log("Inscripto data procesado: ", data);
+  return Object.keys(data).length ? Object.values(data) : null; // Retornar null si el objeto está vacío
 }
 
 function displaySummary(referentes, inscriptos, inscripciones) {
